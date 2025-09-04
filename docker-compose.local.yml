@@ -1,0 +1,83 @@
+# docker-compose.local.yml
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: voyra_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: altere_a_senha_aqui
+      POSTGRES_DB: tiktokdb
+      PGDATA: /data/postgres
+    volumes:
+      - postgres_data:/data/postgres
+    networks:
+      - voyra_rede
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: voyra_rabbitmq
+    ports:
+      # Expõe a interface de gerenciamento para o usuário em http://localhost:15672
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - voyra_rede
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  video-editor:
+    image: ghcr.io/voyraapps/voyra-studio:latest
+    container_name: voyra_app
+    ports:
+      # Expõe a porta do seu aplicativo para o usuário em http://localhost:5020
+      - "5020:5020"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      # As senhas devem ser consistentes com o serviço do postgres
+      - DATABASE_URL=postgresql://postgres:altere_a_senha_aqui@postgres:5432/tiktokdb
+      - DB_HOST=postgres
+      - DB_NAME=tiktokdb
+      - DB_USER=postgres
+      - DB_PASSWORD=altere_a_senha_aqui
+      
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASS=admin
+    volumes:
+      - videos_storage:/app/videos
+      - uploads_storage:/app/uploads
+      - media_storage:/app/media
+    networks:
+      - voyra_rede
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  videos_storage:
+  uploads_storage:
+  media_storage:
+
+networks:
+  voyra_rede:
+    driver: bridge
