@@ -79,9 +79,9 @@ check_status
 
 # ========================= SUCESSO =========================
 echo -e "\n${GREEN}#######################################"
-echo -e "#                                     #"
+echo -e "#                                         #"
 echo -e "#   Voyra Studio instalado com sucesso!   #"
-echo -e "#                                     #"
+echo -e "#                                         #"
 echo -e "#######################################${NC}\n"
 echo -e "Sua aplicação está rodando em segundo plano."
 echo -e "Para acessá-la, use o seguinte endereço no seu navegador:"
