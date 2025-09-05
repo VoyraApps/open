@@ -45,23 +45,31 @@ apt-get install -y ca-certificates curl
 check_status
 
 echo -e "${GREEN}Passo 2 de 5: Instalando o Docker Engine...${NC}"
-# Adicionar a chave GPG oficial do Docker
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-chmod a+r /etc/apt/keyrings/docker.asc
+# VERIFICA SE O DOCKER JÁ ESTÁ INSTALADO
+if ! command -v docker &> /dev/null
+then
+    # Se não estiver instalado, executa a instalação completa
+    echo "Docker não encontrado. Iniciando a instalação..."
+    # Adicionar a chave GPG oficial do Docker
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    chmod a+r /etc/apt/keyrings/docker.asc
 
-# Adicionar o repositório do Docker às fontes do Apt
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt-get update
+    # Adicionar o repositório do Docker às fontes do Apt
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      tee /etc/apt/sources.list.d/docker.list > /dev/null
+    apt-get update
 
-# Instalar o Docker Engine, CLI, Containerd e o plugin do Compose
-apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-check_status
-
-echo -e "${GREEN}Docker instalado com sucesso!${NC}"
+    # Instalar o Docker Engine, CLI, Containerd e o plugin do Compose
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    check_status
+    echo -e "${GREEN}Docker instalado com sucesso!${NC}"
+else
+    # Se já estiver instalado, apenas exibe uma mensagem
+    echo -e "${GREEN}Docker já está instalado. Pulando este passo.${NC}"
+fi
 
 echo -e "${GREEN}Passo 3 de 5: Configurando o ambiente da aplicação...${NC}"
 mkdir -p "$APP_DIR"
@@ -79,9 +87,9 @@ check_status
 
 # ========================= SUCESSO =========================
 echo -e "\n${GREEN}#######################################"
-echo -e "#                                         #"
+echo -e "#                                     #"
 echo -e "#   Voyra Studio instalado com sucesso!   #"
-echo -e "#                                         #"
+echo -e "#                                     #"
 echo -e "#######################################${NC}\n"
 echo -e "Sua aplicação está rodando em segundo plano."
 echo -e "Para acessá-la, use o seguinte endereço no seu navegador:"
@@ -90,3 +98,4 @@ echo -e "Para gerenciar a aplicação, navegue até o diretório ${YELLOW}$APP_D
 echo -e "  - ${YELLOW}docker compose logs -f${NC} (para ver os logs em tempo real)"
 echo -e "  - ${YELLOW}docker compose down${NC} (para parar a aplicação)"
 echo -e "  - ${YELLOW}docker compose up -d${NC} (para iniciar novamente)\n"
+
